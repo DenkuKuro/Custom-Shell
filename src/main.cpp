@@ -1,6 +1,5 @@
 #include <cerrno>
 #include <csignal>
-#include <cstdint>
 #include <filesystem>
 #include <iostream>
 #include <pwd.h>
@@ -64,6 +63,18 @@ void execute(vector<string> cmds) {
   }
 }
 
+// cd implementation
+void changeDirectory(const string &path) {
+  uid_t id = getuid();
+  struct passwd *pwuid = getpwuid(id);
+  if (path == "~") {
+    current_path(filesystem::path{pwuid->pw_dir});
+  } else if (path[0] == '~') {
+  } else {
+    current_path(filesystem::path{path});
+  }
+}
+
 int main(void) {
   char buf[BUFF_SIZE];
   size_t nbytes = sizeof(buf);
@@ -84,8 +95,16 @@ int main(void) {
     buf[nbytes_read] = '\0';
     // tokenize input
     vector<string> tokens{tokenizer(buf)};
-    if (tokens.front() == "exit")
+    if (tokens.front() == "exit" && tokens.size() == 1) {
       exit(EXIT_SUCCESS);
-    execute(tokens);
+    } else if (tokens.front() == "exit" && tokens.size() > 1) {
+      writeError("exit: too many arguments provided\n");
+    } else if (tokens.front() == "cd" && tokens.size() == 2) {
+      changeDirectory(tokens.back());
+    } else if (tokens.front() == "cd" && tokens.size() > 2) {
+      writeError("cd: too many arguments provided\n");
+    } else {
+      execute(tokens);
+    }
   }
 }
