@@ -9,6 +9,6 @@ project(Custom_Shell VERSION 1.0 DESCRIPTION "My Custom Shell implementation" LA
 
 include_directories(include)
 
-file(GLOB SOURCES "src/main.cpp")
+file(GLOB SOURCES "src/shell.cpp")
 
 add_executable(shelldx ${SOURCES})
