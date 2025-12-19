@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <iostream>
 #include <pwd.h>
-#include <sstream>
 #include <string>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -19,13 +18,33 @@ void writeError(const string &msg) {
 
 vector<string> tokenizer(const string &args) {
   vector<string> tokens;
-  stringstream ss{args};
   string intermediate;
-
-  while (ss >> intermediate) {
-    tokens.push_back(intermediate);
+  bool inQuote = false;
+  char quoteChar = 0;
+  for (int i = 0; i < args.size(); ++i) {
+    char c = args[i];
+    if (inQuote) {
+      if (c == quoteChar)
+        inQuote = false;
+      else
+        intermediate += c;
+    } else {
+      if (c == '"' || c == '\'') {
+        inQuote = true;
+        quoteChar = c;
+      } else if (c == ' ' || c == '\n') {
+        if (!intermediate.empty()) {
+          tokens.push_back(intermediate);
+          intermediate.clear();
+        }
+      } else {
+        intermediate += c;
+      }
+    }
   }
 
+  if (!intermediate.empty())
+    tokens.push_back(intermediate);
   return tokens;
 }
 
@@ -70,6 +89,8 @@ void changeDirectory(const string &path) {
   if (path == "~") {
     current_path(filesystem::path{pwuid->pw_dir});
   } else if (path[0] == '~') {
+    current_path(filesystem::path{pwuid->pw_dir});
+    current_path(filesystem::path{string{pwuid->pw_dir} + path.substr(1)});
   } else {
     current_path(filesystem::path{path});
   }
