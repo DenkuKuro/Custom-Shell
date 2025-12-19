@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/shelldx.dir/src/main.cpp.o -o shelldx 
