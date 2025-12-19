@@ -1,3 +1,0 @@
-/home/denkukuro/Coding Projects/Custom-Shell/build/CMakeFiles/shelldx.dir
-/home/denkukuro/Coding Projects/Custom-Shell/build/CMakeFiles/edit_cache.dir
-/home/denkukuro/Coding Projects/Custom-Shell/build/CMakeFiles/rebuild_cache.dir
