@@ -9,7 +9,14 @@
 #include <unistd.h>
 #include <vector>
 
-using namespace std;
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::string;
+using std::vector;
+using std::filesystem::current_path;
+using std::filesystem::filesystem_error;
+using std::filesystem::path;
 #define BUFF_SIZE 4000
 
 void writeError(const string &msg) {
@@ -32,7 +39,7 @@ vector<string> tokenizer(const string &args) {
       if (c == '"' || c == '\'') {
         inQuote = true;
         quoteChar = c;
-      } else if (c == ' ' || c == '\n') {
+      } else if (isspace(c)) {
         if (!intermediate.empty()) {
           tokens.push_back(intermediate);
           intermediate.clear();
@@ -50,10 +57,10 @@ vector<string> tokenizer(const string &args) {
 
 void printCWD() {
   try {
-    filesystem::path curDir = filesystem::current_path();
+    path curDir = current_path();
     string curDirString = curDir.string();
     write(STDOUT_FILENO, curDirString.c_str(), curDirString.length());
-  } catch (const filesystem::filesystem_error &e) {
+  } catch (const filesystem_error &e) {
     cerr << "Filesystem error" << e.what() << endl;
   }
   write(STDOUT_FILENO, "$ ", 2);
@@ -70,7 +77,7 @@ void execute(vector<string> cmds) {
     argv.push_back(nullptr);
     if (execvp(argv.front(), argv.data()) == -1) {
       writeError("shell execution error");
-      exit(EXIT_FAILURE);
+      _exit(127);
     }
   } else if (id == -1) {
     writeError("shell fork error");
@@ -82,18 +89,28 @@ void execute(vector<string> cmds) {
   }
 }
 
+static string prevPath = "";
+static string curPath = "";
+
 // cd implementation
-void changeDirectory(const string &path) {
+void changeDirectory(const vector<string> &args) {
   uid_t id = getuid();
   struct passwd *pwuid = getpwuid(id);
-  if (path == "~") {
-    current_path(filesystem::path{pwuid->pw_dir});
+  if (args.size() > 2)
+    writeError("cd: too many arguments provided\n");
+  const string path = args.back();
+  if (args.size() == 1 || path == "~") {
+    current_path(std::filesystem::path{pwuid->pw_dir});
+    curPath = "~";
   } else if (path[0] == '~') {
-    current_path(filesystem::path{pwuid->pw_dir});
-    current_path(filesystem::path{string{pwuid->pw_dir} + path.substr(1)});
+    current_path(std::filesystem::path{string{pwuid->pw_dir} + path.substr(1)});
+  } else if (path == "-") {
+    current_path(std::filesystem::path{prevPath});
   } else {
-    current_path(filesystem::path{path});
+    current_path(std::filesystem::path{path});
   }
+  prevPath = curPath;
+  curPath = path;
 }
 
 int main(void) {
@@ -116,14 +133,14 @@ int main(void) {
     buf[nbytes_read] = '\0';
     // tokenize input
     vector<string> tokens{tokenizer(buf)};
+    if (tokens.empty())
+      continue;
     if (tokens.front() == "exit" && tokens.size() == 1) {
       exit(EXIT_SUCCESS);
     } else if (tokens.front() == "exit" && tokens.size() > 1) {
       writeError("exit: too many arguments provided\n");
-    } else if (tokens.front() == "cd" && tokens.size() == 2) {
-      changeDirectory(tokens.back());
-    } else if (tokens.front() == "cd" && tokens.size() > 2) {
-      writeError("cd: too many arguments provided\n");
+    } else if (tokens.front() == "cd") {
+      changeDirectory(tokens);
     } else {
       execute(tokens);
     }
