@@ -93,6 +93,7 @@ static string prevPath = "";
 static string curPath = "";
 
 // cd implementation
+// Need to fix prevPath and curPath logic
 void changeDirectory(const vector<string> &args) {
   uid_t id = getuid();
   struct passwd *pwuid = getpwuid(id);
