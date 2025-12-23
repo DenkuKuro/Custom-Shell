@@ -90,28 +90,29 @@ void execute(vector<string> cmds) {
 }
 
 static string prevPath = "";
-static string curPath = "";
 
 // cd implementation
 // Need to fix prevPath and curPath logic
 void changeDirectory(const vector<string> &args) {
   uid_t id = getuid();
   struct passwd *pwuid = getpwuid(id);
+  string curPath = current_path();
   if (args.size() > 2)
     writeError("cd: too many arguments provided\n");
-  const string path = args.back();
+  string path = args.back();
   if (args.size() == 1 || path == "~") {
     current_path(std::filesystem::path{pwuid->pw_dir});
-    curPath = "~";
   } else if (path[0] == '~') {
     current_path(std::filesystem::path{string{pwuid->pw_dir} + path.substr(1)});
   } else if (path == "-") {
-    current_path(std::filesystem::path{prevPath});
+    if (prevPath != "") {
+      current_path(std::filesystem::path{prevPath});
+    } else
+      return;
   } else {
     current_path(std::filesystem::path{path});
   }
   prevPath = curPath;
-  curPath = path;
 }
 
 int main(void) {
