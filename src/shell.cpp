@@ -18,6 +18,7 @@ using std::filesystem::current_path;
 using std::filesystem::filesystem_error;
 using std::filesystem::path;
 #define BUFF_SIZE 4000
+#define HISTORY_SIZE 10
 
 void writeError(const string &msg) {
   write(STDERR_FILENO, msg.c_str(), msg.length());
@@ -90,9 +91,7 @@ void execute(vector<string> cmds) {
 }
 
 static string prevPath = "";
-
 // cd implementation
-// Need to fix prevPath and curPath logic
 void changeDirectory(const vector<string> &args) {
   uid_t id = getuid();
   struct passwd *pwuid = getpwuid(id);
@@ -114,6 +113,9 @@ void changeDirectory(const vector<string> &args) {
   }
   prevPath = curPath;
 }
+
+// Implement History (?)
+static string history[HISTORY_SIZE];
 
 int main(void) {
   char buf[BUFF_SIZE];
