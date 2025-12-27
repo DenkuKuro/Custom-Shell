@@ -1,6 +1,7 @@
 #include <curl/curl.h>
 #include <iostream>
 #include <jsoncpp/json/json.h>
+#include <sstream>
 #include <string>
 
 // Callback function to handle response data
@@ -73,10 +74,33 @@ std::string callGeminiAPI(const std::string &apiKey,
   return readBuffer;
 }
 
+std::vector<std::string> tokenizeCommands(std::string &cmds) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::stringstream ss{cmds};
+
+  while (ss >> token)
+    tokens.push_back(token);
+
+  return tokens;
+}
+
 int main() {
   // Replace with your actual API key
   std::string apiKey = std::getenv("GEMINI_API_KEY");
-  std::string prompt = "Explain quantum computing in simple terms";
+  std::string prompt = R"(
+    You are a Linux command-line assistant. Generate ONLY the exact shell commands needed, without explanations unless asked.
+
+User request: Create 3 files that start with 'test'
+
+Response format:
+- Provide only the executable commands
+- Provide series of commands in a single line
+- No markdown formatting
+- No explanations
+
+Command(s):
+  )";
 
   std::cout << "Sending request to Gemini API..." << std::endl;
 
@@ -87,14 +111,13 @@ int main() {
   Json::Value jsonResponse;
   std::string errs;
   std::istringstream s(response);
-
+  std::string text;
   if (Json::parseFromStream(reader, s, &jsonResponse, &errs)) {
     // Extract the text from the response
     if (jsonResponse.isMember("candidates") &&
         jsonResponse["candidates"].size() > 0) {
-      std::string text =
-          jsonResponse["candidates"][0]["content"]["parts"][0]["text"]
-              .asString();
+      text = jsonResponse["candidates"][0]["content"]["parts"][0]["text"]
+                 .asString();
       std::cout << "\nGemini Response:\n" << text << std::endl;
     } else {
       std::cout << "Raw response:\n" << response << std::endl;
@@ -104,6 +127,10 @@ int main() {
     std::cout << "Raw response:\n" << response << std::endl;
   }
 
+  std::vector<std::string> tokens = tokenizeCommands(text);
+  for (std::string token : tokens)
+    std::cout << token << " ";
+  std::cout << std::endl;
   return 0;
 }
 
