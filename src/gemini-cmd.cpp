@@ -22,7 +22,7 @@ std::string callGeminiAPI(const std::string &apiKey,
   if (curl) {
     // Construct the URL with your API key
     std::string url = "https://generativelanguage.googleapis.com/v1beta/models/"
-                      "gemini-pro:generateContent?key=" +
+                      "gemini-2.5-flash:generateContent?key=" +
                       apiKey;
 
     // Build JSON request body
@@ -75,7 +75,7 @@ std::string callGeminiAPI(const std::string &apiKey,
 
 int main() {
   // Replace with your actual API key
-  std::string apiKey = "YOUR_API_KEY_HERE";
+  std::string apiKey = std::getenv("GEMINI_API_KEY");
   std::string prompt = "Explain quantum computing in simple terms";
 
   std::cout << "Sending request to Gemini API..." << std::endl;
