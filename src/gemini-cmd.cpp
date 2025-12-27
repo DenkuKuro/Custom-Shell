@@ -38,7 +38,7 @@ std::string callGeminiAPI(const std::string &apiKey,
   if (curl) {
     // Construct the URL with your API key
     std::string url = "https://generativelanguage.googleapis.com/v1beta/models/"
-                      "gemini-2.5-flash:generateContent?key=" +
+                      "gemini-3-flash-preview:generateContent?key=" +
                       apiKey;
 
     // Build JSON request body
