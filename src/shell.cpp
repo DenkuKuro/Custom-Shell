@@ -1,3 +1,4 @@
+#include "../include/gemini-cmd.h"
 #include <cerrno>
 #include <csignal>
 #include <filesystem>
@@ -67,7 +68,7 @@ void printCWD() {
   write(STDOUT_FILENO, "$ ", 2);
 }
 
-void execute(vector<string> cmds) {
+void execute(vector<string> &cmds) {
   pid_t id = fork();
   int wstatus;
   if (id == 0) {
@@ -114,6 +115,16 @@ void changeDirectory(const vector<string> &args) {
   prevPath = curPath;
 }
 
+void executeAI(string prompt) {
+  string apiKey = std::getenv("GEMINI_API_KEY");
+  string response = callGeminiAPI(apiKey, prompt);
+  string text = parseResponse(response);
+  vector<string> tokens = tokenizeCommands(text);
+  write(STDOUT_FILENO, text.c_str(), text.length());
+  write(STDOUT_FILENO, "\n", 1);
+  execute(tokens);
+}
+
 // Implement History (?)
 static string history[HISTORY_SIZE];
 
@@ -145,6 +156,8 @@ int main(void) {
       writeError("exit: too many arguments provided\n");
     } else if (tokens.front() == "cd") {
       changeDirectory(tokens);
+    } else if (tokens.front() == "ai") {
+      executeAI(tokens.back());
     } else {
       execute(tokens);
     }

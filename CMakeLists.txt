@@ -16,19 +16,19 @@ link_directories(${JSONCPP_LIBRARY_DIRS})
 
 include_directories(include)
 
-file(GLOB SOURCES "src/shell.cpp")
+file(GLOB SOURCES "src/*.cpp")
 
 add_executable(shelldx ${SOURCES})
-add_executable(gemini_api "src/gemini-cmd.cpp")
+# add_executable(gemini_api "src/gemini-cmd.cpp")
 
 # Link libraries
-target_link_libraries(gemini_api 
+target_link_libraries(shelldx 
     CURL::libcurl
     ${JSONCPP_LIBRARIES}
 )
 
 # Include directories
-target_include_directories(gemini_api PRIVATE 
+target_include_directories(shelldx PRIVATE 
     ${JSONCPP_INCLUDE_DIRS}
 )
 

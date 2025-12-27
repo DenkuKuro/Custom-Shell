@@ -1,8 +1,23 @@
+#include "../include/gemini-cmd.h"
 #include <curl/curl.h>
 #include <iostream>
 #include <jsoncpp/json/json.h>
 #include <sstream>
 #include <string>
+
+const std::string contextPrompt = R"(
+  You are an expert Linux command-line assistant. Your job is to translate natural language requests into precise, executable shell commands.
+  
+  Rules:
+  1. Output ONLY the command(s) needed - no markdown, no code blocks, no backticks
+  2. If multiple commands are needed, separate them with newlines
+  3. Use safe, standard Linux commands
+  4. Assume the user is in a bash shell
+  5. If the request is ambiguous, choose the most common interpretation
+  6. If user request is unrelated to Linux commands provide this message: "Unrelated prompt given..."
+  
+  User Request: 
+)";
 
 // Callback function to handle response data
 size_t WriteCallback(void *contents, size_t size, size_t nmemb,
@@ -32,7 +47,7 @@ std::string callGeminiAPI(const std::string &apiKey,
     Json::Value parts;
     Json::Value textPart;
 
-    textPart["text"] = prompt;
+    textPart["text"] = contextPrompt + prompt;
     parts.append(textPart);
     content["parts"] = parts;
 
@@ -85,27 +100,7 @@ std::vector<std::string> tokenizeCommands(std::string &cmds) {
   return tokens;
 }
 
-int main() {
-  // Replace with your actual API key
-  std::string apiKey = std::getenv("GEMINI_API_KEY");
-  std::string prompt = R"(
-    You are a Linux command-line assistant. Generate ONLY the exact shell commands needed, without explanations unless asked.
-
-User request: Create 3 files that start with 'test'
-
-Response format:
-- Provide only the executable commands
-- Provide series of commands in a single line
-- No markdown formatting
-- No explanations
-
-Command(s):
-  )";
-
-  std::cout << "Sending request to Gemini API..." << std::endl;
-
-  std::string response = callGeminiAPI(apiKey, prompt);
-
+std::string parseResponse(std::string response) {
   // Parse and display the response
   Json::CharReaderBuilder reader;
   Json::Value jsonResponse;
@@ -118,20 +113,13 @@ Command(s):
         jsonResponse["candidates"].size() > 0) {
       text = jsonResponse["candidates"][0]["content"]["parts"][0]["text"]
                  .asString();
-      std::cout << "\nGemini Response:\n" << text << std::endl;
-    } else {
-      std::cout << "Raw response:\n" << response << std::endl;
     }
   } else {
+    // Handle the error better
     std::cerr << "Failed to parse JSON: " << errs << std::endl;
     std::cout << "Raw response:\n" << response << std::endl;
   }
-
-  std::vector<std::string> tokens = tokenizeCommands(text);
-  for (std::string token : tokens)
-    std::cout << token << " ";
-  std::cout << std::endl;
-  return 0;
+  return text;
 }
 
 // To compile on Linux/Mac:
