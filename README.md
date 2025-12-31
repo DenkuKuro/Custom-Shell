@@ -28,3 +28,17 @@ The goal of this project is to explore **system programming concepts**, shell de
   ```bash
   ai "list all files larger than 1MB in the current directory"
 
+### Example Usage
+```bash
+/home/user$ ls -l
+/home/user$ cd ~/Documents
+/home/user/Documents$ ai show disk usage of this folder
+/home/user/Documents$ exit
+
+### Limitations
+- No pipe (|) support yet
+- No I/O redirection (>, <)
+- No job control (&, fg, bg)
+- AI command accuracy depends on prompt clarity
+
+
