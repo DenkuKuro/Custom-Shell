@@ -28,6 +28,13 @@ The goal of this project is to explore **system programming concepts**, shell de
   ```bash
   ai "list all files larger than 1MB in the current directory"
   ```
+### How the AI Command Works (High-Level)
+1. User enters an ai prompt
+2. The prompt is sent to the Gemini API via HTTPS
+3. Gemini returns a Linux command as text
+4. The shell parses and executes the command using existing execution logic
+This design keeps AI strictly as a suggestion layer, not a privileged executor.
+
 ### Example Usage
 ```bash
 /home/user$ ls -l
@@ -35,10 +42,16 @@ The goal of this project is to explore **system programming concepts**, shell de
 /home/user/Documents$ ai show disk usage of this folder
 /home/user/Documents$ exit
 ```
+
 ### Limitations
 - No pipe (|) support yet
 - No I/O redirection (>, <)
 - No job control (&, fg, bg)
 - AI command accuracy depends on prompt clarity
 
+### Disclaimer
+The AI command executes real system commands.
+Use it **only in a safe environment**. The author is not responsible for unintended command execution.
 
+### License
+This project is for educational purposes.
